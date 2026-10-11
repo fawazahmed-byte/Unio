@@ -24,6 +24,7 @@
 - [Deployment](#deployment)
 - [Security Notes](#security-notes)
 - [Pre-Submission Checklist](#pre-submission-checklist)
+- [Reviewer Access and Evaluation Guide](#reviewer-access-and-evaluation-guide)
 
 ---
 
@@ -415,6 +416,30 @@ Verify that `client/vercel.json` points to the correct deployed backend URL. Upd
 - [ ] The deployed frontend communicates with the correct backend.
 - [ ] Live application and public repository links are correct.
 - [ ] Evaluation instructions use dedicated demo credentials without exposing personal passwords.
+
+## Reviewer Access and Evaluation Guide
+
+Use the deployed application: **https://unio-psi.vercel.app**
+
+The accounts below are demo accounts created for evaluating UNIO. Their email addresses are not real inboxes.
+
+### Demo credentials
+
+| Role | Email | Password |
+|---|---|---|
+| Creator | `meera-kulkarni@creators.unio.example` | `UnioDemo2026!` |
+| Brand | `team@verdant.unio.example` | `UnioDemo2026!` |
+| Brand | `studio@northwind.unio.example` | `UnioDemo2026!` |
+| Reviewer | `reviewer@unio.example` | `<REVIEWER_PASSWORD from .env>` |
+
+### How to evaluate
+
+1. Open https://unio-psi.vercel.app and sign in with the account for the role you want to test. Public creator and campaign pages can also be browsed without signing in.
+2. **As a creator**, explore profile management, the portfolio, campaign applications, invitations, and projects.
+3. **As a brand**, explore campaign creation (including the AI-Assisted Brief Builder), applicant review, creator invitations, and project management.
+4. **As a reviewer**, open the verification queue and approve or reject the evidence that creators have submitted.
+
+To see both sides of a workflow, sign in as a brand and invite a creator to a campaign. Then sign out, sign in as that creator, and accept the invitation. The resulting project appears for both accounts.
 
 ---
 
