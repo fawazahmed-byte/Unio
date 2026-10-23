@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Images, MapPin, Play, Sparkles } from 'lucide-react';
+import { ArrowRight, Images, MapPin, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { Avatar } from '../../components/ui/Avatar.jsx';
@@ -104,17 +104,16 @@ function Hero() {
 
         <div className="order-first mx-auto flex w-[220px] flex-col items-center gap-3 md:order-none md:w-full">
           <div className="relative w-full overflow-hidden rounded-[26px] border-[6px] border-[#0b1a22] shadow-[0_40px_80px_-30px_rgba(0,0,0,.8),0_0_0_1px_var(--color-slate)]">
-            <MediaFrame item={{ _id: 'hero-example', mediaType: 'image' }} aspect="aspect-[9/16]" className="rounded-none" showLabel={false} hover={false} />
-            <span className="absolute inset-0 m-auto grid size-14 place-items-center rounded-full bg-page/90 text-ink" aria-hidden>
-              <Play className="ml-0.5 size-5 fill-current" />
-            </span>
-            <div className="absolute inset-x-3 bottom-3 flex items-center gap-2 font-mono text-[11px] text-white" aria-hidden>
-              <span>0:06</span>
-              <b className="relative h-[3px] flex-1 rounded bg-white/30">
-                <i className="absolute inset-y-0 left-0 w-2/5 rounded bg-white" />
-              </b>
-              <span>0:15</span>
-            </div>
+            <video
+              src="/hero-reel.mp4"
+              className="aspect-[9/16] w-full bg-navy object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label="Example UNIO launch reel"
+            />
           </div>
           <span className="font-mono text-[11px] text-mist">Example · skincare launch reel</span>
         </div>
