@@ -437,7 +437,7 @@ The accounts below are demo accounts created for evaluating UNIO. Their email ad
 | Creator | `meera-kulkarni@creators.unio.example` | `UnioDemo2026!` |
 | Brand | `team@verdant.unio.example` | `UnioDemo2026!` |
 | Brand | `studio@northwind.unio.example` | `UnioDemo2026!` |
-| Reviewer | `reviewer@unio.example` | see `REVIEWER_PASSWORD` in `server/.env` |
+| Reviewer | `reviewer@unio.example` | `<REVIEWER_PASSWORD from .env>` |
 
 ### How to evaluate
 
