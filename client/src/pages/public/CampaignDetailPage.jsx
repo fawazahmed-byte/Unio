@@ -11,6 +11,7 @@ import { Alert, ErrorState, PageLoader } from '../../components/ui/Feedback.jsx'
 import { RightsStrip, RightsTicket } from '../../components/ui/Rights.jsx';
 import { MatchRing, Reasons } from '../../components/ui/Match.jsx';
 import { ToolChip } from '../../components/ui/Trust.jsx';
+import { BrandVerifiedBadge } from '../../components/verification/BrandTrust.jsx';
 import { toolStateFor } from '../../components/creators/CreatorCard.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle.js';
@@ -211,6 +212,7 @@ export default function CampaignDetailPage() {
                     {campaign.category ? ` · ${labelOf(taxonomy, 'specializations', campaign.category)}` : ''}
                   </span>
                   {brand?.accountType === 'agency' && <Pill dot={false}>Agency</Pill>}
+                  <BrandVerifiedBadge level={brand?.trustLevel} />
                   {brand?.isDemo && <DemoBadge label="Demo brand" />}
                   {campaign.status !== 'open' && <StatusPill status={campaign.status} />}
                 </div>

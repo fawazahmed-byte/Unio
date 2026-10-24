@@ -3,6 +3,7 @@ import { BrandProfile, Campaign, CreatorProfile, Message, Project } from '../mod
 import { ApiError } from '../utils/ApiError.js';
 import { mapBy } from '../utils/db.js';
 import { pageResult, paginate } from '../utils/http.js';
+import { assertBrandCanHire } from './brandVerification.service.js';
 import { campaignSummary, creatorSummary, publicBrand, rightsSummary } from './serializers.js';
 import { recomputeCreatorTrust } from './trust.service.js';
 
@@ -30,6 +31,8 @@ function deliverablesFromCampaign(campaign) {
  * Rights are snapshotted here so later campaign edits never change a live project (F7).
  */
 export async function createProjectFromSource({ campaign, creatorId, sourceType, sourceId }, session) {
+  // Safety net: every way of starting a project goes through here. An invitation is accepted by the creator.
+  await assertBrandCanHire(campaign.brandId, { actor: sourceType === 'invitation' ? 'creator' : 'brand' });
   try {
     return await Project.findOneAndUpdate(
       { campaignId: campaign._id, creatorId },

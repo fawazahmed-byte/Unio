@@ -2,6 +2,7 @@ import { BrandProfile, Campaign, CreatorProfile, Invitation } from '../models/in
 import { ApiError } from '../utils/ApiError.js';
 import { mapBy, withTransaction } from '../utils/db.js';
 import { pageResult, paginate } from '../utils/http.js';
+import { assertBrandCanHire } from './brandVerification.service.js';
 import { requireOwnCampaign } from './campaigns.service.js';
 import { requireCreatorProfile } from './profile.service.js';
 import { createProjectFromSource } from './projects.service.js';
@@ -9,6 +10,7 @@ import { campaignSummary, creatorSummary, publicBrand } from './serializers.js';
 
 export async function inviteCreator(user, campaignId, { creatorId, message }) {
   const campaign = await requireOwnCampaign(user, campaignId);
+  await assertBrandCanHire(user._id);
   if (campaign.status !== 'open') {
     throw ApiError.conflict('Open this campaign before inviting creators', 'CAMPAIGN_NOT_OPEN');
   }

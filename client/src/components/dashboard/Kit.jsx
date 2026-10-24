@@ -4,6 +4,7 @@ import { statusLabel } from '../../lib/status.js';
 import { Button } from '../ui/Button.jsx';
 import { Dialog } from '../ui/Dialog.jsx';
 import { Alert } from '../ui/Feedback.jsx';
+import { ApiErrorMessage } from '../verification/BrandTrust.jsx';
 
 /** v9 .stat variants: navy, bone, grey, white, and a gold-outlined highlight. */
 const STAT_VARIANTS = {
@@ -69,7 +70,11 @@ export function ConfirmAction({ trigger, title, body, confirmLabel, variant = 'p
       <Dialog open={open} onClose={() => setOpen(false)} title={title} size="sm">
         <div className="space-y-5">
           {body && <div className="text-[14px] text-steel">{body}</div>}
-          {error && <Alert tone="error">{error.message}</Alert>}
+          {error && (
+            <Alert tone="error">
+              <ApiErrorMessage error={error} />
+            </Alert>
+          )}
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="ghost" onClick={() => setOpen(false)}>
               Go back

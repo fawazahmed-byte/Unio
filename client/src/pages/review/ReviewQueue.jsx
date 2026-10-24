@@ -18,6 +18,7 @@ import { formatDate } from '../../lib/format.js';
 import { embedUrl, isVideoFile } from '../../lib/embed.js';
 import { statusLabel } from '../../lib/status.js';
 import { endpoints } from '../../services/api.js';
+import { BRAND_KIND, BrandReviewDetail } from './BrandReviewDetail.jsx';
 
 const TYPE_LABEL = { tool: 'Tool', workflow: 'Workflow', portfolio: 'Past work', certificate: 'Certificate' };
 const KIND = (s) => (s.type === 'tool' ? (s.method === 'challenge' ? 'Tool · challenge' : 'Tool · evidence') : TYPE_LABEL[s.type]);
@@ -241,6 +242,7 @@ const TABS = [
   ['tools', 'Tools'],
   ['certificates', 'Certificates'],
   ['flagged', 'Flagged'],
+  ['brands', 'Brands'],
 ];
 
 export default function ReviewQueue() {
@@ -249,13 +251,16 @@ export default function ReviewQueue() {
   const [status, setStatus] = useState('PENDING');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
+  const brands = tab === 'brands';
   const query = useQuery({
     queryKey: ['review', { status, tab, page }],
-    queryFn: () => endpoints.review.list({ status, tab, page, limit: 20 }),
+    queryFn: () => (brands ? endpoints.review.brandList({ status, page, limit: 20 }) : endpoints.review.list({ status, tab, page, limit: 20 })),
   });
+  // The Brands tab label needs its own count while another tab is open.
+  const brandQueue = useQuery({ queryKey: ['review', 'brand-count'], queryFn: () => endpoints.review.brandList({ status: 'PENDING', limit: 1 }) });
   const items = query.data?.items ?? [];
   const active = items.find((s) => s._id === selected) ?? items[0];
-  const tabs = query.data?.tabs ?? {};
+  const tabs = { ...(brands ? {} : query.data?.tabs), brands: brandQueue.data?.tabs?.all ?? 0 };
   const counts = query.data?.counts ?? {};
 
   return (
@@ -263,7 +268,7 @@ export default function ReviewQueue() {
       <PageHeader
         eyebrow="Reviewer"
         title="Verification queue"
-        description="Automatic pre-checks first. You make the call."
+        description={brands ? 'Domain and business claims from brands. Automatic pre-checks first. You make the call.' : 'Automatic pre-checks first. You make the call.'}
         actions={
           <div className="inline-flex rounded-full border border-line2 bg-white p-[3px]" role="tablist" aria-label="Queue">
             {TABS.map(([key, label]) => (
@@ -326,12 +331,12 @@ export default function ReviewQueue() {
                         onClick={() => setSelected(s._id)}
                         className={`flex w-full items-center gap-3 border-b border-line px-4 py-3.5 text-left last:border-0 ${on ? 'bg-navy text-white' : 'hover:bg-soft'}`}
                       >
-                        <Avatar name={s.creator?.displayName ?? '?'} src={s.creator?.photoUrl} size="sm" />
+                        <Avatar name={(brands ? s.brand?.companyName : s.creator?.displayName) ?? '?'} src={brands ? undefined : s.creator?.photoUrl} size="sm" />
                         <span className="min-w-0 flex-1">
-                          <b className="block truncate text-[14px]">{s.creator?.displayName}</b>
+                          <b className="block truncate text-[14px]">{brands ? s.brand?.companyName : s.creator?.displayName}</b>
                           <span className={`block truncate text-[12.5px] ${on ? 'text-bone' : 'text-steel'}`}>
-                            {s.subject} · {KIND(s)}
-                            {s.flagged && ' · duplicate match'}
+                            {brands ? `${BRAND_KIND(s)} verification` : `${s.subject} · ${KIND(s)}`}
+                            {!brands && s.flagged && ' · duplicate match'}
                           </span>
                         </span>
                         <span className={`text-[12px] ${on ? 'text-bone' : 'text-steel'}`}>{ago(s.status === 'PENDING' ? s.submittedAt : s.reviewedAt ?? s.updatedAt)}</span>
@@ -343,7 +348,7 @@ export default function ReviewQueue() {
             </Card>
             <Pagination page={query.data.page} totalPages={query.data.totalPages} onChange={setPage} />
           </div>
-          {active && <Detail key={active._id} s={active} onDecided={() => setSelected(null)} />}
+          {active && (brands ? <BrandReviewDetail key={active._id} s={active} onDecided={() => setSelected(null)} /> : <Detail key={active._id} s={active} onDecided={() => setSelected(null)} />)}
         </div>
       )}
     </>

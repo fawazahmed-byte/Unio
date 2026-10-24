@@ -13,6 +13,11 @@ export const VERIFICATION_TYPES = ['tool', 'workflow', 'portfolio', 'certificate
 export const VERIFICATION_METHODS = ['challenge', 'certificate', 'evidence'];
 export const CHECK_RESULTS = ['pass', 'fail', 'unknown'];
 export const VERIFICATION_STATUS = ['SELF_REPORTED', 'PENDING', 'VERIFIED', 'REJECTED'];
+// Brand verification (levels are ordered: each needs the one before it).
+export const BRAND_TRUST_LEVELS = ['signed_up', 'domain_verified', 'business_verified'];
+export const BRAND_VERIFICATION_LEVELS = ['domain', 'business'];
+export const BRAND_PROOF_KINDS = ['dns', 'instagram', 'linkedin', 'youtube'];
+export const BUSINESS_ID_TYPES = ['GSTIN', 'CIN', 'UDYAM'];
 
 export const schemaOptions = { timestamps: true, versionKey: false };
 

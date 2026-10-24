@@ -24,6 +24,12 @@ export async function resetDb() {
   await Promise.all(collections.map((c) => c.deleteMany({})));
 }
 
+/** Test shortcut: put a brand at a verification level without going through a reviewer. */
+export async function setBrandLevel(userId, level) {
+  const { BrandProfile } = await import('../src/models/index.js');
+  await BrandProfile.updateOne({ userId }, { $set: { brandTrustLevel: level } });
+}
+
 let counter = 0;
 
 /** Minimum per-role sign-up fields (guide §6.1). `agency` = role brand + accountType agency. */
@@ -34,8 +40,12 @@ export function registerFields(kind, n = counter) {
   return { ...brandBase, accountType: 'brand', industry: 'beauty' };
 }
 
-/** Registers a user and returns a supertest agent that carries its session cookie. */
-export async function signUp(app, role, overrides = {}) {
+/**
+ * Registers a user and returns a supertest agent that carries its session cookie.
+ * Brands start verified (domain_verified) so the many tests that hire creators stay about hiring;
+ * pass { verified: false } to test the signed_up behaviour of brand verification itself.
+ */
+export async function signUp(app, role, overrides = {}, { verified = true } = {}) {
   counter += 1;
   const agent = request.agent(app);
   const body = {
@@ -47,6 +57,7 @@ export async function signUp(app, role, overrides = {}) {
   };
   const res = await agent.post('/api/auth/register').send(body);
   if (res.status !== 201) throw new Error(`signUp failed: ${res.status} ${JSON.stringify(res.body)}`);
+  if (verified && role !== 'creator') await setBrandLevel(res.body.data.user._id ?? res.body.data.user.id, 'domain_verified');
   return { agent, user: res.body.data.user, profile: res.body.data.profile, body };
 }
 

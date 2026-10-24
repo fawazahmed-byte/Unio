@@ -121,6 +121,11 @@ export const endpoints = {
     updateClient: (id, body) => api.put(`/brand/clients/${id}`, body),
     archiveClient: (id) => api.delete(`/brand/clients/${id}`),
     approvals: (params) => api.get('/brand/approvals', params),
+    verification: () => api.get('/brand/verification'),
+    checkDomain: (body) => api.post('/brand/verification/domain/check', body),
+    domainCode: (body) => api.post('/brand/verification/domain/code', body),
+    submitDomain: (body) => api.post('/brand/verification/domain/submit', body),
+    submitBusiness: (body) => api.post('/brand/verification/business', body),
   },
   // Public, no login: the client's approval link (A3).
   approval: {
@@ -134,6 +139,8 @@ export const endpoints = {
   review: {
     list: (params) => api.get('/review/verifications', params),
     decide: (id, body) => api.patch(`/review/verifications/${id}`, body),
+    brandList: (params) => api.get('/review/brand-verifications', params),
+    brandDecide: (id, body) => api.patch(`/review/brand-verifications/${id}`, body),
   },
   projects: {
     get: (id) => api.get(`/projects/${id}`),

@@ -90,6 +90,8 @@ export function publicBrand(b) {
     // Colours only: shown as swatches on briefs. The rest of the kit stays with the brand and the brief builder.
     kitColors: (b.brandKit?.colors ?? []).map(({ name, hex }) => ({ name, hex })),
     isDemo: b.isDemo,
+    // "domain_verified" | "business_verified"; absent for signed_up, so there is no badge to fake.
+    trustLevel: b.brandTrustLevel === 'domain_verified' || b.brandTrustLevel === 'business_verified' ? b.brandTrustLevel : undefined,
   };
 }
 

@@ -23,11 +23,13 @@ import {
   PortfolioItem,
   Project,
   User,
+  BrandVerification,
   VerificationSubmission,
 } from '../src/models/index.js';
 import { hashPassword } from '../src/services/auth.service.js';
 import { createProjectFromSource, decideVersion, postMessage, submitVersion } from '../src/services/projects.service.js';
 import { recomputeCreatorTrust } from '../src/services/trust.service.js';
+import { grantLevel } from '../src/services/brandVerification.service.js';
 import { createApprovalLink } from '../src/services/approvals.service.js';
 import { runChallengeChecks } from '../src/services/precheck.service.js';
 import { decide, newChallengeCode } from '../src/services/verification.service.js';
@@ -204,6 +206,9 @@ async function seedCreator(c, passwordHash) {
   return profile;
 }
 
+/** Demo brands start fully verified (the seeded projects need it); the record says it is demo data. */
+const grantDemoLevel = (user) => grantLevel(user._id, 'business_verified', { note: 'Demo seed — not a real check.' });
+
 async function seedBrand(b, passwordHash) {
   const user = await upsertUser({ name: b.name, email: b.email, role: 'brand' }, passwordHash);
   await BrandProfile.findOneAndUpdate(
@@ -211,6 +216,7 @@ async function seedBrand(b, passwordHash) {
     { $set: { companyName: b.name, industry: b.industry, websiteUrl: b.websiteUrl, description: b.description, brandKit: b.brandKit, isDemo: true } },
     { upsert: true, returnDocument: 'after', runValidators: true },
   );
+  await grantDemoLevel(user);
   const campaigns = {};
   for (const c of b.campaigns) {
     campaigns[c.title] = await Campaign.findOneAndUpdate(
@@ -281,6 +287,7 @@ async function seedAgency(a, passwordHash) {
     },
     { upsert: true, returnDocument: 'after', runValidators: true },
   ).lean();
+  await grantDemoLevel(user);
   const clientOf = (name) => profile.clients.find((c) => c.name === name);
   const campaigns = {};
   for (const { client, ...c } of a.campaigns) {
@@ -312,7 +319,7 @@ async function upsertInvitation(campaign, creator, message, status) {
 
 async function main() {
   await connectDB();
-  await Promise.all([User, CreatorProfile, BrandProfile, PortfolioItem, Campaign, Application, Invitation, Project, Message, VerificationSubmission].map((m) => m.syncIndexes()));
+  await Promise.all([User, CreatorProfile, BrandProfile, PortfolioItem, Campaign, Application, Invitation, Project, Message, VerificationSubmission, BrandVerification].map((m) => m.syncIndexes()));
   console.log(`Seeding database "${mongoose.connection.name}"...`);
 
   const passwordHash = await hashPassword(PASSWORD);
@@ -430,6 +437,7 @@ async function main() {
 
   // Reviewer account (operator-provisioned role; cannot be chosen at sign-up).
   const reviewer = await upsertUser({ name: 'UNIO Reviewer', email: 'reviewer@unio.example', role: 'reviewer' }, passwordHash);
+  await BrandVerification.updateMany({ reviewNote: /^Demo seed/, reviewerId: { $exists: false } }, { $set: { reviewerId: reviewer._id } });
 
   // Verification demo. Claims are seeded as PENDING (submitted, with placeholder evidence on the reserved
   // .example domain) or SELF_REPORTED. Demo creators' "v" tools are then APPROVED through the same
@@ -503,7 +511,7 @@ async function main() {
   for (const creator of Object.values(creators)) await recomputeCreatorTrust(creator._id);
 
   const counts = {};
-  for (const [name, model] of Object.entries({ users: User, creatorProfiles: CreatorProfile, brandProfiles: BrandProfile, portfolioItems: PortfolioItem, campaigns: Campaign, applications: Application, invitations: Invitation, projects: Project, messages: Message, verificationSubmissions: VerificationSubmission })) {
+  for (const [name, model] of Object.entries({ users: User, creatorProfiles: CreatorProfile, brandProfiles: BrandProfile, portfolioItems: PortfolioItem, campaigns: Campaign, applications: Application, invitations: Invitation, projects: Project, messages: Message, verificationSubmissions: VerificationSubmission, brandVerifications: BrandVerification })) {
     counts[name] = await model.countDocuments();
   }
   console.table(counts);

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import * as agency from '../controllers/agency.controller.js';
 import * as authCtrl from '../controllers/auth.controller.js';
 import * as brand from '../controllers/brand.controller.js';
+import * as brandVerify from '../controllers/brandVerification.controller.js';
 import * as creator from '../controllers/creator.controller.js';
 import * as project from '../controllers/project.controller.js';
 import * as pub from '../controllers/public.controller.js';
@@ -150,7 +151,16 @@ router.post(
 router.put('/creator/verifications/:id', asCreator, validate({ params: idParams, body: v.verificationUpdateBody }), verify.update);
 router.delete('/creator/verifications/:id', asCreator, validate({ params: idParams }), verify.remove);
 
+/* ---------- Brand verification (domain + business levels; agencies verify themselves the same way) ---------- */
+router.get('/brand/verification', asBrand, brandVerify.getOwn);
+router.post('/brand/verification/domain/check', asBrand, validate({ body: v.brandDomainBody }), brandVerify.checkDomain);
+router.post('/brand/verification/domain/code', asBrand, verifySubmitLimiter, validate({ body: v.brandDomainBody }), brandVerify.issueDomainCode);
+router.post('/brand/verification/domain/submit', asBrand, verifySubmitLimiter, validate({ body: v.brandDomainSubmitBody }), brandVerify.submitDomain);
+router.post('/brand/verification/business', asBrand, verifySubmitLimiter, validate({ body: v.brandBusinessBody }), brandVerify.submitBusiness);
+
 const asReviewer = [requireAuth, requireRole('reviewer')];
+router.get('/review/brand-verifications', asReviewer, validate({ query: v.brandReviewListQuery }), brandVerify.listForReview);
+router.patch('/review/brand-verifications/:id', asReviewer, validate({ params: idParams, body: v.reviewDecisionBody }), brandVerify.decide);
 router.get('/review/verifications', asReviewer, validate({ query: v.reviewListQuery }), verify.listForReview);
 router.patch('/review/verifications/:id', asReviewer, validate({ params: idParams, body: v.reviewDecisionBody }), verify.decide);
 

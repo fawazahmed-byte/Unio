@@ -1,6 +1,9 @@
 import { z } from 'zod';
+import { BUSINESS_ID_PATTERNS, isValidBusinessId } from '../services/brandDomain.js';
 import {
   AVAILABILITY,
+  BRAND_PROOF_KINDS,
+  BUSINESS_ID_TYPES,
   CAMPAIGN_STATUS,
   DELIVERABLE_STATUS,
   MEDIA_TYPES,
@@ -506,6 +509,38 @@ export const reviewDecisionBody = z
     path: ['note'],
     message: 'Explain what is missing or wrong (at least 10 characters) so the creator can fix it',
   });
+
+/* ---------- Brand verification ---------- */
+// No level, status or reviewer field: those come only from reviewers.
+export const brandDomainBody = z
+  .object({
+    websiteUrl: z.url({ protocol: /^https?$/, message: 'Enter your website, like https://yourcompany.com' }).max(2048),
+    workEmail: z.email('Enter a valid work email').max(254),
+  })
+  .strict();
+
+export const brandDomainSubmitBody = z
+  .object({ kind: z.enum(BRAND_PROOF_KINDS), proofUrl: httpsUrl.optional() })
+  .strict()
+  .superRefine((b, ctx) => {
+    if (b.kind !== 'dns' && !b.proofUrl) ctx.addIssue({ code: 'custom', path: ['proofUrl'], message: 'Add the link to your official page' });
+  });
+
+export const brandBusinessBody = z
+  .object({ idType: z.enum(BUSINESS_ID_TYPES), idNumber: text(30, 5), legalName: text(200, 2) })
+  .strict()
+  .superRefine((b, ctx) => {
+    if (!isValidBusinessId(b.idType, b.idNumber)) {
+      ctx.addIssue({ code: 'custom', path: ['idNumber'], message: BUSINESS_ID_PATTERNS[b.idType]?.hint ?? 'Check the number' });
+    }
+  });
+
+export const brandReviewListQuery = z.object({
+  status: z.enum(VERIFICATION_STATUS).default('PENDING'),
+  tab: z.enum(['domain', 'business']).optional(),
+  ...pageQuery,
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
 
 /* ---------- Project feedback ---------- */
 export const feedbackBody = z.object({

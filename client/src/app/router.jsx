@@ -118,6 +118,7 @@ export const router = createBrowserRouter([
         { path: 'approvals', lazy: page(() => import('../pages/brand/AgencyApprovals.jsx')) },
         { path: 'projects', lazy: page(() => import('../pages/shared/ProjectsList.jsx'), { role: 'brand' }) },
         { path: 'profile', lazy: page(() => import('../pages/brand/BrandProfile.jsx')) },
+        { path: 'verification', lazy: page(() => import('../pages/brand/BrandVerification.jsx')) },
       ]),
       workspace('review', 'reviewer', [{ index: true, lazy: page(() => import('../pages/review/ReviewQueue.jsx')) }]),
       ...devRoutes,

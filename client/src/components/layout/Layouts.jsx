@@ -124,6 +124,7 @@ function navFor(role, counts, agency = false) {
       account: [
         { to: '/brand/clients', label: 'Clients', icon: LayoutGrid },
         { to: '/brand/profile', label: 'Agency profile', icon: UserRound },
+        { to: '/brand/verification', label: 'Verification', icon: ShieldCheck },
       ],
       cta: { to: '/brand/campaigns/new', label: 'New brief for…', icon: Sparkles, scoped: true },
     };
@@ -138,7 +139,10 @@ function navFor(role, counts, agency = false) {
         { to: '/brand/projects', label: 'Projects', icon: FolderKanban, count: counts.projects, match: ['/projects/'] },
         { to: '/brand/invitations', label: 'Invitations', icon: Mail },
       ],
-      account: [{ to: '/brand/profile', label: 'Brand profile', icon: UserRound }],
+      account: [
+        { to: '/brand/profile', label: 'Brand profile', icon: UserRound },
+        { to: '/brand/verification', label: 'Verification', icon: ShieldCheck },
+      ],
       cta: { to: '/brand/campaigns/new', label: 'New brief with AI', icon: Sparkles },
     };
   }

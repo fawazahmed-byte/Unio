@@ -6,6 +6,7 @@ import { categoryName, deliverablesSummary } from '../../lib/rights.js';
 import { DemoBadge, Pill, Tag } from '../ui/Badge.jsx';
 import { MatchRing } from '../ui/Match.jsx';
 import { RightsStrip } from '../ui/Rights.jsx';
+import { BrandVerifiedBadge } from '../verification/BrandTrust.jsx';
 
 /** Brand tile: the brand's own first kit colour when set (brand data), otherwise navy. */
 export function BrandTile({ brand, size = 'md' }) {
@@ -39,6 +40,7 @@ export function BriefCard({ campaign, match, preview = false }) {
             {campaign.clientName ? `For ${campaign.clientName} · via ${campaign.brand?.companyName}` : campaign.brand?.companyName}
             {campaign.category ? ` · ${categoryName(taxonomy, campaign.category)}` : ''}
           </span>
+          <BrandVerifiedBadge level={campaign.brand?.trustLevel} compact className="ml-1.5 align-middle" />
         </div>
         {match != null && <MatchRing score={match} />}
         {campaign.brand?.isDemo && match == null && <DemoBadge label="Demo" />}

@@ -18,14 +18,25 @@ const KNOWN_HOSTS = [
   'dropbox.com', '1drv.ms', 'onedrive.live.com', 'coursera.org', 'credly.com', 'blob.core.windows.net',
 ];
 
-let io = { fetch: (...args) => globalThis.fetch(...args), lookup: (host) => dns.lookup(host, { all: true }), anthropic: null };
+const liveIo = () => ({
+  fetch: (...args) => globalThis.fetch(...args),
+  lookup: (host) => dns.lookup(host, { all: true }),
+  resolveTxt: (host) => dns.resolveTxt(host),
+  anthropic: null,
+});
+let io = liveIo();
 let overridden = false;
-/** Test hook: replace the network (fetch, dns lookup) and the Anthropic client used by the checks. */
+/** Test hook: replace the network (fetch, dns lookup and TXT lookup) and the Anthropic client used by the checks. */
 export function __setNetworkForTests(fake) {
   overridden = !!fake;
   io = fake
-    ? { fetch: fake.fetch, lookup: fake.lookup ?? (async () => [{ address: '93.184.216.34' }]), anthropic: fake.anthropic ?? null }
-    : { fetch: (...args) => globalThis.fetch(...args), lookup: (host) => dns.lookup(host, { all: true }), anthropic: null };
+    ? {
+        fetch: fake.fetch,
+        lookup: fake.lookup ?? (async () => [{ address: '93.184.216.34' }]),
+        resolveTxt: fake.resolveTxt ?? (async () => { throw Object.assign(new Error('no TXT'), { code: 'ENODATA' }); }),
+        anthropic: fake.anthropic ?? null,
+      }
+    : liveIo();
 }
 
 export function isPrivateIp(ip) {
@@ -201,6 +212,26 @@ export async function runCertificateChecks({ creatorId, certificate, skipNetwork
     { id: 'host', label: 'Verify link is on a known issuer site', result: isKnownHost(certificate.verifyUrl) ? 'pass' : 'unknown', detail: hostOf(certificate.verifyUrl) },
     dupe,
   ];
+}
+
+/**
+ * Brand verification pre-check: is the challenge code in a TXT record of the domain?
+ * A hint for the reviewer. "Not found" can simply mean DNS has not propagated yet, and any lookup
+ * problem is "unknown", never a verdict.
+ */
+export async function runDnsCodeCheck({ domain, code, skipNetwork = false }) {
+  const base = { id: 'dns_txt', label: 'Code found in the DNS TXT record' };
+  if (skipNetwork || (env.isTest && !overridden)) return { ...base, result: 'unknown', detail: 'Not checked automatically' };
+  try {
+    const records = await io.resolveTxt(domain);
+    const found = records.some((chunks) => chunks.join('').includes(code));
+    return found
+      ? { ...base, result: 'pass', detail: `Code found on ${domain}` }
+      : { ...base, result: 'fail', detail: `Code not found in the TXT records of ${domain}. DNS can take a while to update.` };
+  } catch (err) {
+    if (err?.code === 'ENODATA' || err?.code === 'ENOTFOUND') return { ...base, result: 'fail', detail: `No TXT records found for ${domain}` };
+    return { ...base, result: 'unknown', detail: 'Could not look up the DNS record' };
+  }
 }
 
 export const isFlagged = (checks) => checks.some((c) => c.id === 'duplicate' && c.result === 'fail');

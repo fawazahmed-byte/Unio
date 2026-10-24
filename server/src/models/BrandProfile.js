@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { schemaOptions, urlField } from './enums.js';
+import { BRAND_TRUST_LEVELS, schemaOptions, urlField } from './enums.js';
 import { CLIENT_COLOR_IDS, SPECIALIZATION_IDS, TEAM_SIZE_IDS } from './taxonomy.js';
 
 export const ACCOUNT_TYPES = ['brand', 'agency'];
@@ -49,6 +49,8 @@ const brandProfileSchema = new mongoose.Schema(
       neverDo: { type: String, trim: true, maxlength: 500, default: '' },
       assetUrls: { type: [urlField()], default: [] },
     },
+    /** Brand verification level. Only the brand verification service raises it (reviewer decisions, seed, grandfather script). */
+    brandTrustLevel: { type: String, enum: BRAND_TRUST_LEVELS, default: 'signed_up' },
     isDemo: { type: Boolean, default: false },
   },
   schemaOptions,

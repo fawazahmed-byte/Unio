@@ -20,8 +20,8 @@ function keyFor(type, { subject, portfolioItemId }) {
 }
 
 const DAY = 24 * 60 * 60 * 1000;
-const CHALLENGE_HOURS = 48;
-const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/I/1 — easy to read off a screen
+export const CHALLENGE_HOURS = 48;
+export const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0/I/1 — easy to read off a screen
 
 /** UNIO-XXXX, from a CSPRNG. */
 export function newChallengeCode() {

@@ -9,6 +9,7 @@ import { Button, ButtonLink } from '../ui/Button.jsx';
 import { Dialog } from '../ui/Dialog.jsx';
 import { Alert, EmptyState, ErrorState, Skeleton } from '../ui/Feedback.jsx';
 import { Textarea } from '../ui/Form.jsx';
+import { ApiErrorMessage } from '../verification/BrandTrust.jsx';
 
 /**
  * Brand invites a creator to one of its own open campaigns.
@@ -142,7 +143,11 @@ export function InviteDialog({ open, onClose, creator, existingInvitations = [] 
             placeholder={`Tell ${creator.displayName.split(' ')[0]} why their work fits this brief.`}
           />
 
-          {invite.error && <Alert tone="error">{invite.error.message}</Alert>}
+          {invite.error && (
+            <Alert tone="error">
+              <ApiErrorMessage error={invite.error} />
+            </Alert>
+          )}
 
           <div className="flex flex-col-reverse gap-2 border-t border-line/60 pt-5 sm:flex-row sm:justify-end">
             <Button variant="ghost" onClick={close}>

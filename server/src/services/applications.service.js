@@ -5,6 +5,7 @@ import { pageResult, paginate } from '../utils/http.js';
 import { requireOwnCampaign } from './campaigns.service.js';
 import { requireCreatorProfile } from './profile.service.js';
 import { matchesForCampaign } from './matching.service.js';
+import { assertBrandCanHire } from './brandVerification.service.js';
 import { createProjectFromSource } from './projects.service.js';
 import { campaignSummary, creatorSummary, publicBrand } from './serializers.js';
 
@@ -120,6 +121,8 @@ export async function reviewApplication(user, id, status) {
     throw ApiError.notFound('Application not found');
   });
   if (existing.status !== 'pending') throw ApiError.invalidTransition(existing.status, status);
+  // Hiring needs a verified brand. Rejecting an application stays open to everyone.
+  if (status === 'accepted') await assertBrandCanHire(user._id);
 
   return withTransaction(async (session) => {
     // Conditional update guards against two reviewers acting at the same moment.
