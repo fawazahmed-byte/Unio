@@ -491,6 +491,7 @@ describe('Gemini provider', () => {
     const { agent } = await signUp(app, 'brand');
     const cases = [
       [reply(400, [{ error: { code: 400, message: 'API key not valid. Please pass a valid API key.', status: 'INVALID_ARGUMENT' } }]), 502, 'AI_MISCONFIGURED'],
+      [reply(400, [{ error: { code: 400, message: 'User location is not supported for the API use.', status: 'FAILED_PRECONDITION' } }]), 502, 'AI_REGION_BLOCKED'],
       [reply(429, [{ error: { code: 429, message: 'Resource has been exhausted', status: 'RESOURCE_EXHAUSTED' } }]), 429, 'AI_RATE_LIMITED'],
       [reply(503, [{ error: { code: 503, message: 'The model is overloaded.' } }]), 502, 'AI_UNAVAILABLE'],
       [reply(200, completion('{"title": "cut off', 'length')), 502, 'AI_BAD_RESPONSE'],

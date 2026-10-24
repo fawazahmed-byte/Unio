@@ -635,6 +635,10 @@ async function callChatCompletions(provider, userMessage) {
   if (status === 400 && /api key/i.test(body?.error?.message ?? '')) status = 401;
   if (!res.ok || body?.error) {
     console.error(`[brief-builder] ${cfg.label} error:`, status, body?.error?.message ?? '');
+    // Google rejects calls from unsupported locations (e.g. a Hong Kong server) with a 400 FAILED_PRECONDITION.
+    if (/location is not supported/i.test(body?.error?.message ?? '')) {
+      throw new ApiError(502, 'AI_REGION_BLOCKED', 'The AI service is not available from where this server runs. Use the template instead.');
+    }
     if (status === 429) throw new ApiError(429, 'AI_RATE_LIMITED', 'The AI service is busy right now. Try again in a minute, or use the template instead.');
     if (status === 401 || status === 403) throw new ApiError(502, 'AI_MISCONFIGURED', 'The AI service is not configured correctly. Use the template instead.');
     if (status === 402) throw new ApiError(502, 'AI_NO_CREDITS', 'The AI account is out of credits. Use the template instead.');

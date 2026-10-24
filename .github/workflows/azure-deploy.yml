@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  AZURE_WEBAPP_NAME: unio-webapp-2026 # placeholder: replace with the real App Service name
+  AZURE_WEBAPP_NAME: unio-gemini-region-test-2026 # UAE North (Gemini rejects East Asia / Hong Kong)
 
 jobs:
   build-and-deploy:
