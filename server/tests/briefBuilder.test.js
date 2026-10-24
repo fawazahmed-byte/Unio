@@ -376,6 +376,76 @@ describe('OpenRouter provider', () => {
   });
 });
 
+describe('OpenAI provider', () => {
+  let app;
+  before(async () => {
+    app = await startDb();
+  });
+  after(stopDb);
+  beforeEach(resetDb);
+  afterEach(() => {
+    __setClientForTests(null);
+    __setFetchForTests(null);
+  });
+
+  const IDEA = { idea: 'Short vertical ads for our summer SPF gel, fresh and honest, budget around 15k' };
+  const reply = (status, body) => async () => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+  const completion = (content) => ({
+    model: 'test-model',
+    choices: [{ finish_reason: 'stop', message: { role: 'assistant', content } }],
+  });
+
+  test('sends a JSON-mode request with max_completion_tokens and normalizes the reply', async () => {
+    const calls = [];
+    __setFetchForTests(async (url, init) => {
+      calls.push({ url, init });
+      return reply(200, completion(JSON.stringify(GOOD_DRAFT)))();
+    }, 'openai');
+    const { agent } = await signUp(app, 'brand');
+    const res = await agent.post('/api/brand/briefs/draft').send(IDEA);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.data.source, 'ai');
+    assert.equal(res.body.data.fields.category, 'beauty');
+    const sent = JSON.parse(calls[0].init.body);
+    assert.equal(calls[0].url, 'https://api.openai.com/v1/chat/completions');
+    assert.deepEqual(sent.response_format, { type: 'json_object' });
+    assert.equal(sent.max_completion_tokens, 4000);
+    assert.equal(sent.max_tokens, undefined, 'newer OpenAI models reject max_tokens');
+    assert.match(calls[0].init.headers.Authorization, /^Bearer /);
+  });
+
+  test('Azure OpenAI posts to the configured v1 endpoint with the api-key header', async () => {
+    const calls = [];
+    __setFetchForTests(async (url, init) => {
+      calls.push({ url, init });
+      return reply(200, completion(JSON.stringify(GOOD_DRAFT)))();
+    }, 'azure');
+    const { agent } = await signUp(app, 'brand');
+    const res = await agent.post('/api/brand/briefs/draft').send(IDEA);
+    assert.equal(res.status, 200);
+    assert.equal(res.body.data.source, 'ai');
+    const sent = JSON.parse(calls[0].init.body);
+    assert.match(calls[0].url, /\/chat\/completions$/);
+    assert.equal(sent.max_completion_tokens, 4000);
+    assert.ok(calls[0].init.headers['api-key'] !== undefined);
+  });
+
+  test('maps OpenAI failures to clear errors', async () => {
+    const { agent } = await signUp(app, 'brand');
+    const cases = [
+      [reply(401, { error: { message: 'Incorrect API key provided' } }), 502, 'AI_MISCONFIGURED'],
+      [reply(429, { error: { message: 'Rate limit reached' } }), 429, 'AI_RATE_LIMITED'],
+      [reply(503, { error: { message: 'The server is overloaded' } }), 502, 'AI_UNAVAILABLE'],
+    ];
+    for (const [impl, status, code] of cases) {
+      __setFetchForTests(impl, 'openai');
+      const res = await agent.post('/api/brand/briefs/draft').send(IDEA);
+      assert.equal(res.status, status, code);
+      assert.equal(res.body.error.code, code);
+    }
+  });
+});
+
 describe('DeepSeek provider', () => {
   let app;
   before(async () => {

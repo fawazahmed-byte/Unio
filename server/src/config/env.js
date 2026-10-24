@@ -25,7 +25,15 @@ export const env = {
   // AI Brief Builder. Optional: without a key the endpoint returns a labelled template draft.
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   briefModel: process.env.BRIEF_AI_MODEL || 'claude-opus-5-5',
-  // Google Gemini (OpenAI-compatible endpoint): used when ANTHROPIC_API_KEY is not set.
+  // Azure OpenAI (Foundry) through its OpenAI-compatible /openai/v1 endpoint; the model is the deployment name.
+  // Used when ANTHROPIC_API_KEY is not set. Needs the endpoint, key and deployment together.
+  azureOpenaiEndpoint: (process.env.AZURE_OPENAI_ENDPOINT || '').replace(/\/+$/, ''),
+  azureOpenaiApiKey: process.env.AZURE_OPENAI_API_KEY || '',
+  azureOpenaiDeployment: process.env.AZURE_OPENAI_DEPLOYMENT || '',
+  // OpenAI: used when neither ANTHROPIC_API_KEY nor Azure OpenAI is set. The model has no default; set OPENAI_MODEL with the key.
+  openaiApiKey: process.env.OPENAI_API_KEY || '',
+  openaiModel: process.env.OPENAI_MODEL || '',
+  // Google Gemini (OpenAI-compatible endpoint): used when neither ANTHROPIC_API_KEY nor OPENAI_API_KEY is set.
   geminiApiKey: process.env.GEMINI_API_KEY || '',
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   // DeepSeek (OpenAI-compatible API): used when neither ANTHROPIC_API_KEY nor GEMINI_API_KEY is set.

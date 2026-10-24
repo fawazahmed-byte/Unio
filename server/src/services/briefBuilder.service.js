@@ -469,7 +469,7 @@ function buildUserMessage(idea, { brand, piece, answers }) {
 let clientOverride = null;
 let fetchOverride = null;
 let fetchProvider = 'openrouter';
-/** Test hook: replace fetch for a chat-completions provider ('openrouter', 'gemini' or 'deepseek'). */
+/** Test hook: replace fetch for a chat-completions provider ('azure', 'openai','openrouter', 'gemini' or 'deepseek'). */
 export function __setFetchForTests(fake, provider = 'openrouter') {
   fetchOverride = fake;
   fetchProvider = provider;
@@ -485,10 +485,12 @@ function getClient() {
   return new Anthropic({ apiKey: env.anthropicApiKey, timeout: 45_000, maxRetries: 1 });
 }
 
-/** Which provider handles AI drafts: Anthropic direct, then Gemini, DeepSeek, OpenRouter, else none (template). */
+/** Which provider handles AI drafts: Anthropic direct, then Azure OpenAI, OpenAI, Gemini, DeepSeek, OpenRouter, else none (template). */
 export function activeProvider() {
   if (clientOverride || env.anthropicApiKey) return 'anthropic';
   if (fetchOverride) return fetchProvider;
+  if (env.azureOpenaiEndpoint && env.azureOpenaiApiKey && env.azureOpenaiDeployment) return 'azure';
+  if (env.openaiApiKey && env.openaiModel) return 'openai';
   if (env.geminiApiKey) return 'gemini';
   if (env.deepseekApiKey) return 'deepseek';
   if (env.openRouterApiKey) return 'openrouter';
@@ -582,6 +584,26 @@ const CHAT_PROVIDERS = {
     },
     // Low reasoning effort: free reasoning models can otherwise spend the whole token budget thinking.
     fallback: { ...JSON_MODE, extra: { ...JSON_MODE.extra, reasoning: { effort: 'low' } } },
+  }),
+  // Azure OpenAI's v1 endpoint: same chat-completions shape, the "model" is the deployment name.
+  azure: () => ({
+    label: 'Azure OpenAI',
+    url: `${env.azureOpenaiEndpoint}/chat/completions`,
+    apiKey: env.azureOpenaiApiKey,
+    model: env.azureOpenaiDeployment,
+    headers: { 'api-key': env.azureOpenaiApiKey },
+    tokenParam: 'max_completion_tokens',
+    ...JSON_MODE,
+  }),
+  // OpenAI in JSON mode. Newer models reject max_tokens, so the limit is sent as max_completion_tokens.
+  openai: () => ({
+    label: 'OpenAI',
+    url: 'https://api.openai.com/v1/chat/completions',
+    apiKey: env.openaiApiKey,
+    model: env.openaiModel,
+    headers: {},
+    tokenParam: 'max_completion_tokens',
+    ...JSON_MODE,
   }),
   // Gemini's OpenAI-compatible endpoint, in JSON mode (its schema support rejects some JSON-schema
   // keywords). Low reasoning effort keeps thinking tokens from using up the output budget.
@@ -678,7 +700,7 @@ async function sendChat(cfg, userMessage) {
       },
       body: JSON.stringify({
         model: cfg.model,
-        max_tokens: 4000,
+        [cfg.tokenParam ?? 'max_tokens']: 4000,
         messages: [
           { role: 'system', content: cfg.system },
           { role: 'user', content: userMessage },
